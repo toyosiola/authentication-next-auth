@@ -1,9 +1,11 @@
 import NextAuth from "next-auth/next";
 import Credentials from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import FacebookProvider from "next-auth/providers/facebook";
 import mongoClient from "../../../utils/mongodb/mongoConnect";
 import { verifyPassword } from "../../../utils/auth/passwordHandler";
 
-const auth0options = {
+export const authOptions = {
   // providers
   providers: [
     Credentials({
@@ -31,11 +33,11 @@ const auth0options = {
           // find user from collection
           if (isEmail) {
             user = await usersCollection.findOne({
-              email: email_username,
+              email: email_username.toLowerCase(),
             });
           } else {
             user = await usersCollection.findOne({
-              username: email_username,
+              username: email_username.toLowerCase(),
             });
           }
         } catch (error) {
@@ -66,7 +68,27 @@ const auth0options = {
         return { name: user.username, email: user.email };
       },
     }),
+
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
+    }),
+
+    FacebookProvider({
+      clientId: process.env.FACEBOOK_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+    }),
   ],
+  session: {
+    strategy: "jwt",
+  },
 };
 
-export default NextAuth(auth0options);
+export default NextAuth(authOptions);

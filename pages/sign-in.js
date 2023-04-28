@@ -1,16 +1,19 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "./api/auth/[...nextauth]";
 import { signIn } from "next-auth/react";
 import SingleInput from "../components/SingleInput";
+import { useGlobalContext } from "../contexts/GlobalContext";
+import { useRouter } from "next/router";
 import {
   IconFacebookColored,
   IconGoogleColored,
   IconMail,
   IconUser,
 } from "../assets/icons";
-import { useGlobalContext } from "../contexts/GlobalContext";
-import { useRouter } from "next/router";
 
 function SignIn() {
   const router = useRouter();
+
   const {
     error_msg,
     errorMsgHandler,
@@ -183,7 +186,7 @@ function SignIn() {
             {/* submit button */}
             <button
               type="submit"
-              className="mt-6 w-full rounded-sm bg-primary px-6 py-2 text-lg font-bold text-white duration-300 hover:bg-primary/80 disabled:cursor-not-allowed sm:text-xl"
+              className="mt-6 w-full rounded-sm bg-primary px-6 py-2 text-lg font-bold text-white duration-300 hover:bg-primary/80 disabled:cursor-not-allowed disabled:bg-primary/60 sm:text-xl"
               onClick={submitHandler}
               disabled={isLoading ? true : false}
             >
@@ -212,10 +215,16 @@ function SignIn() {
 
           {/* button flex container */}
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <button className="flex items-center justify-center gap-2 rounded-lg border p-2  duration-300 hover:bg-primary hover:text-white xs:p-3">
+            <button
+              className="flex items-center justify-center gap-2 rounded-lg border p-2  duration-300 hover:bg-primary hover:text-white xs:p-3"
+              onClick={() => signIn("google")}
+            >
               <IconGoogleColored className="text-4xl" /> Sign in with Google
             </button>
-            <button className="flex items-center justify-center gap-2 rounded-lg border p-3 duration-300 hover:bg-primary/80 hover:text-white">
+            <button
+              className="flex items-center justify-center gap-2 rounded-lg border p-3 duration-300 hover:bg-primary/80 hover:text-white"
+              onClick={() => signIn("facebook")}
+            >
               <IconFacebookColored className="text-3xl" /> Sign in with Facebook
             </button>
           </div>
@@ -225,6 +234,23 @@ function SignIn() {
       <section className="hidden h-10 bg-primary sm:block"></section>
     </main>
   );
+}
+
+export async function getServerSideProps({ req, res }) {
+  const data = await getServerSession(req, res, authOptions);
+
+  if (data) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
 }
 
 export default SignIn;
